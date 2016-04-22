@@ -13,21 +13,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -42,19 +38,202 @@ public class MiningStackOverflow {
      * @param args the command line arguments
      */
     HashMap<String, Integer> tags_map;
+    
+    
     public static boolean ASC = true;
     public static boolean DESC = false;
     
+    //setting
+    public static boolean answerOK=true;
+    public static String targetTAG="android";
+    public static boolean allTags=false;
+    public static boolean allPosts=false;
+    
     public MiningStackOverflow(){
+       
         tags_map = new HashMap<>();
+        
     }
     public static void main(String[] args) {
+         HashSet<Post>post_set;
         // TODO code application logic here
         MiningStackOverflow mso = new MiningStackOverflow();
-        mso.getPosts(pathxml,writepath);
+        post_set = mso.getPosts(pathxml,writepath);
+        mso.writePosts(post_set, "Title", "Android_Posts_title.txt");
     }
-private void getPosts(String readfilepath, String writepath){
+private HashSet<Post> getPosts(String readfilepath, String writepath){
+    HashSet<Post>postSet = new HashSet<>();
     BufferedReader reader=null;
+    BufferedWriter bw = null;
+    int skipped_count =0;
+    try {
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(readfilepath), "UTF-8"));
+        FileWriter fw = new FileWriter(new File(writepath));
+        bw = new BufferedWriter(fw);
+        String line;
+        int countpost=0;
+        Post p= new Post();
+    while ((line = reader.readLine()) != null) {
+        try{
+        line = line.trim();
+        if(line.startsWith("<row")){
+            p= new Post();
+            String[] Id_parts = line.split("Id");
+             if(Id_parts.length>1){
+            String Id = Id_parts[1].trim().split("\"")[1].trim();
+                p.setId(Id);
+             }
+            String[] PostTypeId_parts = line.split("PostTypeId");
+            String PostTypeId="";
+             if(PostTypeId_parts.length>1){
+                PostTypeId = PostTypeId_parts[1].trim().split("\"")[1].trim();
+                p.setPostTypeId(PostTypeId);
+             }
+            if(PostTypeId.equals("1") || allPosts){//question
+               
+               String[] tag_parts_line = line.split("Tags");
+               
+               String tags="";
+               if(tag_parts_line.length>1){
+               String[] tag_parts =tag_parts_line[1].split("\"");
+                tags = tag_parts[1].trim().replaceAll("&lt", " ");
+                tags = tags.replaceAll(";", " ");
+                tags = tags.replaceAll("&gt", " ");
+                tags = tags.replaceAll("\\s+", " ");//remove multiple space
+               }
+                String[] tag_list = tags.trim().split(" ");
+                ArrayList<String> tags_arraylist = new ArrayList<>();
+                
+                tags_arraylist.addAll(Arrays.asList(tag_list));
+             if(tags_arraylist.contains(targetTAG) || allTags){
+               
+                p.setTags(tags_arraylist);
+               
+               
+               String[] ParentId_parts = line.split("ParentId");
+                  if(ParentId_parts.length>1){
+                    String ParentId = ParentId_parts[1].trim().split("\"")[1].trim();
+                     p.setParentId(ParentId);
+                   }
+              String[] AcceptedAnswerId_parts = line.split("AcceptedAnswerId");
+               if(AcceptedAnswerId_parts.length>1){
+                String AcceptedAnswerId = AcceptedAnswerId_parts[1].trim().split("\"")[1].trim();
+                p.setAcceptedAnswerId(AcceptedAnswerId);
+               }
+               String[] CreationDate_parts = line.split("CreationDate");
+               if(CreationDate_parts.length>1){
+               String CreationDate = CreationDate_parts[1].trim().split("\"")[1].trim();
+                p.setCreationDate(CreationDate);
+               }
+               String[] Score_parts = line.split("Score");
+               if(Score_parts.length>1){
+                String Score = Score_parts[1].trim().split("\"")[1].trim();
+                p.setScore(Integer.parseInt(Score));
+               }
+               
+               String[] ViewCount_parts = line.split("ViewCount");
+               if(ViewCount_parts.length>1){
+                String ViewCount = ViewCount_parts[1].trim().split("\"")[1].trim();
+                p.setViewCount(Integer.parseInt(ViewCount));
+               }
+               
+               String[] Body_parts = line.split("Body");
+                if(Body_parts.length>1){
+                    String Body = Body_parts[1].trim().split("\"")[1].trim();
+                    p.setBody(Body);
+                }
+               String[] OwnerUserId_parts = line.split("OwnerUserId");
+               if(OwnerUserId_parts.length>1){
+                String OwnerUserId = OwnerUserId_parts[1].trim().split("\"")[1].trim();
+                p.setOwnerUserId(OwnerUserId);
+               }
+               String[] LastEditorUserId_parts = line.split("LastEditorUserId");
+               if(LastEditorUserId_parts.length>1){
+                    String LastEditorUserId = LastEditorUserId_parts[1].trim().split("\"")[1].trim();
+                    p.setLastEditorUserId(LastEditorUserId);
+               }
+               String[] LastEditorDisplayName_parts = line.split("LastEditorDisplayName");
+                if(LastEditorDisplayName_parts.length>1){
+                    String LastEditorDisplayName = LastEditorDisplayName_parts[1].trim().split("\"")[1].trim();
+                    p.setLastEditorDisplayName(LastEditorDisplayName);
+                }
+               String[] LastEditDate_parts = line.split("LastEditDate");
+                if(LastEditDate_parts.length>1){
+                    String LastEditDate = LastEditDate_parts[1].trim().split("\"")[1].trim();
+                    p.setLastEditDate(LastEditDate);
+                }
+               
+               String[] LastActivityDate_parts = line.split("LastActivityDate");
+               if(LastActivityDate_parts.length>1){
+                    String LastActivityDate = LastActivityDate_parts[1].trim().split("\"")[1].trim();
+                    p.setLastActivityDate(LastActivityDate);
+               }
+               String[] Title_parts = line.split("Title");
+                if(Title_parts.length>1){
+                    String Title = Title_parts[1].trim().split("\"")[1].trim();
+                    p.setTitle(Title);
+                }
+               String[] AnswerCount_parts = line.split("AnswerCount");
+               if(AnswerCount_parts.length>1){
+                    String AnswerCount = AnswerCount_parts[1].trim().split("\"")[1].trim();
+                    p.setAnswerCount(Integer.parseInt(AnswerCount));
+               }
+               String[] CommentCount_parts = line.split("CommentCount");
+               if(CommentCount_parts.length>1){
+                    String CommentCount = CommentCount_parts[1].trim().split("\"")[1].trim();
+                    p.setCommentCount(Integer.parseInt(CommentCount));
+               }
+               
+               String[] FavoriteCount_parts = line.split("FavoriteCount");
+               if(FavoriteCount_parts.length>1){
+                String FavoriteCount = FavoriteCount_parts[1].trim().split("\"")[1].trim();
+                p.setFavoriteCount(Integer.parseInt(FavoriteCount));
+               }
+               String[] CommunityOwnedDate_parts = line.split("CommunityOwnedDate");
+               if(CommunityOwnedDate_parts.length>1){
+                    String CommunityOwnedDate = CommunityOwnedDate_parts[1].trim().split("\"")[1].trim();
+                    p.setCommunityOwnedDate(CommunityOwnedDate);
+               }
+               
+            }
+            }
+            countpost++;
+            if(countpost%10000==0){
+                System.out.println("Written: "+countpost + " Skipped: "+skipped_count);
+             }
+            postSet.add(p);
+                    
+            // System.out.println(p); 
+            
+       }
+    }catch(Exception e){
+        skipped_count++;
+       // System.out.println(p); 
+         //   System.out.println("Not well formatted, skipping ..");
+    }
+   }
+  } catch(IOException e){
+        System.err.format("[Error]Failed to open file %s!!", readfilepath);
+   }
+   finally{
+        if(reader !=null){
+            try {
+                reader.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MiningStackOverflow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if(bw!=null)
+            try {
+                bw.close();
+        } catch (IOException ex) {
+            Logger.getLogger(MiningStackOverflow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+   }
+    return postSet;
+}
+    private void getPostsTitle(String readfilepath, String writepath){
+        BufferedReader reader=null;
     BufferedWriter bw = null;
     int skipped_count =0;
     try {
@@ -132,58 +311,6 @@ private void getPosts(String readfilepath, String writepath){
    }
     tags_map = sortByComparator(tags_map, DESC);
     writeMapOnFile(tags_map, "tags_java.txt");
-}
-    private void getPost(String readfilepath, String writepath){
-        BufferedWriter bw = null;
-        try {
-      File inputFile = new File(readfilepath);
-      DocumentBuilderFactory dbFactory 
-         = DocumentBuilderFactory.newInstance();
-      DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-      Document doc = dBuilder.parse(inputFile);
-      doc.getDocumentElement().normalize();
-      
-      
-  
-    
-     FileWriter fw = new FileWriter(new File(writepath));
-     bw = new BufferedWriter(fw);
- // System.out.println("Root element :"+ doc.getDocumentElement().getNodeName());
-    NodeList nList = doc.getElementsByTagName("row");
-    int countpost=0;
-    for (int temp = 0; temp < nList.getLength(); temp++) {
-         Node nNode = nList.item(temp);
-        // System.out.println("\nCurrent Element :" 
-         //   + nNode.getNodeName());
-         if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-            Element eElement = (Element) nNode;
-            //System.out.println("table elements : "+ eElement.getAttribute("column"));
-          //  String column0r = eElement.getElementsByTagName("title").item(0).getTextContent();
-            // System.out.println("Question: "+eElement.getAttribute("PostTypeId"));
-             int post_type = Integer.parseInt(eElement.getAttribute("PostTypeId"));   
-             if(post_type==1){//question
-               // System.out.println("Title: "+eElement.getAttribute("Title"));
-                bw.write(eElement.getAttribute("Title")+"\n");
-                countpost++;
-                if(countpost%10000==0){
-                    System.out.println("Questions title written: "+countpost);
-                }
-             }
-           }
-        }
-    }catch (Exception e) {
-        e.printStackTrace();
-   }
-        finally
-   { 
-      try{
-         if(bw!=null)
-            bw.close();
-      }catch(Exception ex){
-          System.out.println("Error in closing the BufferedWriter"+ex);
-       }
-
-   }
   }
 public void writeMapOnFile(HashMap<String,Integer>wmap,String fileName)
 {
@@ -199,6 +326,43 @@ public void writeMapOnFile(HashMap<String,Integer>wmap,String fileName)
        String key =name;
        String value = wmap.get(name).toString();
        bw.write(key+" "+value+"\n");
+    }
+    System.out.println("Write Successfull: "+fileName);
+
+ } catch (IOException ioe) {
+      ioe.printStackTrace();
+   }
+   finally
+   { 
+      try{
+         if(bw!=null)
+            bw.close();
+      }catch(Exception ex){
+          System.out.println("Error in closing the BufferedWriter"+ex);
+       }
+
+   }
+
+}
+public void writePosts(HashSet<Post>postset,String field, String fileName)
+{
+   BufferedWriter bw = null;
+   try {
+    File file = new File(fileName);
+     if (!file.exists()) {
+        file.createNewFile();
+     }
+     FileWriter fw = new FileWriter(rootpath+file);
+     bw = new BufferedWriter(fw);
+    for (Post p: postset){
+        if(field.equals("Title")){
+            String title = p.getTitle();
+            ArrayList<String> tagslist = p.getTags();
+            if(title !=null){
+                bw.write(title+"\n");
+                bw.write(tagslist.toString()+"\n");
+            }
+        }
     }
     System.out.println("Write Successfull: "+fileName);
 
