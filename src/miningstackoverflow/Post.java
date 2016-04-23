@@ -14,11 +14,11 @@ import java.util.ArrayList;
 public class Post {
     private String Id;
     private String PostTypeId;
-    private String ParentID;
+    private String ParentId;
     private String AcceptedAnswerId;
     private String CreationDate;
-    private String Score;
-    private String ViewCount;
+    private int Score=0;
+    private int ViewCount=0;
     private String Body;
     private String OwnerUserId;
     private String LastEditorUserId;
@@ -29,9 +29,9 @@ public class Post {
     private String ClosedDate;
     private String Title;
     private ArrayList<String> Tags;
-    private int AnswerCount;
-    private int CommentCount;
-    private int FavoriteCount;
+    private int AnswerCount=0;
+    private int CommentCount=0;
+    private int FavoriteCount=0;
     
     public String getId(){
         return this.Id;
@@ -39,8 +39,8 @@ public class Post {
     public String getPostTypeId(){
         return this.PostTypeId;
     }
-    public String getParentID(){
-        return this.ParentID;  
+    public String getParentId(){
+        return this.ParentId;  
     }
     public String getAcceptedAnswerId(){
         return this.AcceptedAnswerId;  
@@ -48,10 +48,10 @@ public class Post {
     public String getCreationDate(){
         return this.CreationDate;  
     }
-    public String getScore(){
+    public int getScore(){
         return this.Score;  
     }
-    public String getViewCount(){
+    public int getViewCount(){
         return this.ViewCount;  
     }
     public String getBody(){
@@ -100,8 +100,8 @@ public class Post {
     public void setPostTypeId(String PostTypeId){
         this.PostTypeId=PostTypeId;
     }
-    public void setParentID(String ParentID){
-        this.ParentID=ParentID;  
+    public void setParentId(String ParentId){
+        this.ParentId=ParentId;  
     }
     public void setAcceptedAnswerId(String AcceptedAnswerId){
         this.AcceptedAnswerId=AcceptedAnswerId;  
@@ -109,10 +109,10 @@ public class Post {
     public void setCreationDate(String CreationDate){
         this.CreationDate=CreationDate;  
     }
-    public void setScore(String Score){
+    public void setScore(int Score){
         this.Score=Score;  
     }
-    public void setViewCount(String ViewCount){
+    public void setViewCount(int ViewCount){
         this.ViewCount=ViewCount;  
     }
     public void setBody(String Body){
@@ -153,5 +153,31 @@ public class Post {
     }
     public void setFavoriteCount(int favcount){
         this.FavoriteCount=favcount; 
+    }
+    @Override
+    public String toString(){
+        String tag_list="";
+        if(Tags !=null){
+            tag_list = Tags.toString();
+        }
+       return "Post: \n"
+               + "Id: "+Id+"\n"
+               + "PostTypeId: "+PostTypeId+"\n"
+               + "ParentId: "+ParentId+"\n"
+               + "AcceptedAnswerId: "+AcceptedAnswerId+"\n"
+               + "CreationDate: "+CreationDate+"\n"
+               + "ViewCount: "+ViewCount+"\n"
+               + "Body: "+Body+"\n"
+               + "OwnerUserId: "+OwnerUserId+"\n"
+               + "LastEditorUserId: "+LastEditorUserId+"\n"
+               + "LastEditorDisplayName: "+LastEditorDisplayName+"\n"
+               + "LastEditDate: "+LastEditDate+"\n"
+               + "Title: "+Title+"\n"
+               + "Tags: "+tag_list+"\n"
+               + "AnswerCount: "+AnswerCount+"\n"
+               + "CommentCount: "+CommentCount+"\n"
+               + "FavoriteCount: "+FavoriteCount+"\n"
+               + "CommunityOwnedDate: "+CommunityOwnedDate+"\n";
+               
     }
 }
