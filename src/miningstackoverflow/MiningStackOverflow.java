@@ -9,9 +9,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,8 +34,10 @@ import java.util.logging.Logger;
 public class MiningStackOverflow {
     public static String pathxml =  "C:/Development/NetbeanProjects/data/miningstackoverflow/Posts.xml";
    // public static String pathxml =  "C:/Development/NetbeanProjects/data/miningstackoverflow/Posts_sample.xml";
-    public static String writepath = "C:/Development/NetbeanProjects/data/miningstackoverflow/post_title_java.txt";
+    public static String writepath = "C:/Development/NetbeanProjects/data/miningstackoverflow/Android_Posts_title.txt";
     public static String rootpath = "C:/Development/NetbeanProjects/data/miningstackoverflow/";
+    public static String readpath = "C:/Development/NetbeanProjects/data/miningstackoverflow/Android_Posts_title.txt";
+    
     /**
      * @param args the command line arguments
      */
@@ -54,13 +58,126 @@ public class MiningStackOverflow {
         tags_map = new HashMap<>();
         
     }
-    public static void main(String[] args) {
-         HashSet<Post>post_set;
-        // TODO code application logic here
-        MiningStackOverflow mso = new MiningStackOverflow();
-        post_set = mso.getPosts(pathxml,writepath);
-        mso.writePosts(post_set, "Title", "Android_Posts_title.txt");
+public static void main(String[] args) {
+     HashSet<Post>post_set;
+     HashMap<String, ArrayList<String>> title_tags;
+    // TODO code application logic here
+    MiningStackOverflow mso = new MiningStackOverflow();
+    title_tags = mso.loadTitles(readpath);
+    //System.out.println("Title map size: "+title_tags.size());
+    ArrayList<String> baseType1 = new ArrayList<>();
+    baseType1.add("android-maps");
+    baseType1.add("android-emulator");
+    baseType1.add("android-layout");
+    baseType1.add("android-studio");
+    baseType1.add("android-debugging");
+
+    double param = 0.5;
+   
+    mso.rankTitle(title_tags, baseType1, param);
+    //mso.writePosts(post_set, "Title", "Android_Posts_title.txt");
+     //post_set = mso.getPosts(pathxml,writepath);
+}
+private void rankTitle(HashMap<String, ArrayList<String>> titleMap, ArrayList<String> baseTagList,double wparam){
+    HashMap<String, Double> ranks = new HashMap<>();
+    for(String title:titleMap.keySet()){
+        ArrayList<String> postTagList = titleMap.get(title);
+        double score = calculateScore(postTagList, baseTagList, wparam);
+        ranks.put(title, score);
     }
+    ranks = sortByComparatorDouble(ranks, DESC);
+    writeOnFile_doubleHash(ranks,"ranks_title.txt");
+    
+}
+private double calculateScore(ArrayList<String> postTagList, ArrayList<String> baseTagList, double weightParam){
+    if(postTagList.isEmpty() || baseTagList.isEmpty()){
+        return 0;
+    }
+    double score=0;
+    double simiScore=0;
+    double ratioScore=0;
+    List<String> common = new ArrayList<>(baseTagList);
+    common.retainAll(postTagList);
+    
+    simiScore = common.size();
+    ratioScore = simiScore/postTagList.size();
+    score = simiScore + weightParam * ratioScore;
+    score =score/(baseTagList.size()+1);//normalized over base length
+    //System.out.println("Post:"+postTagList.toString()+"\n \t"+baseTagList.toString()+"\n \t"+common.toString());
+    return score;//[0 to 1]
+}
+private HashMap<String, ArrayList<String>>loadTitles(String filepath){
+    HashMap<String, ArrayList<String>> titletags = new HashMap<>();
+   BufferedReader reader=null;
+    try {
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), "UTF-8"));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String title = line;
+            String tags;
+            if((tags=reader.readLine()) !=null){//assuming no duplicate title
+                if(tags.trim().startsWith("[")){
+                    tags = tags.replaceAll("\\[", "");
+                    tags = tags.replaceAll("]", "");
+                    String[] tags_parts = tags.trim().split(",");
+                    ArrayList<String> tagList = new ArrayList<>();
+                    for (String tags_part : tags_parts) {
+                        tagList.add(tags_part.trim());
+                    }
+                    
+                    titletags.put(title, tagList);
+                   // System.out.println("Title: "+title+"="+tagList.toString());
+                }
+            }
+        }
+        
+    }catch(Exception e){
+        e.printStackTrace();
+    }
+   finally{
+        if(reader !=null){
+            try {
+                reader.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MiningStackOverflow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+   }
+    return titletags;
+}
+public void writeOnFile_doubleHash(HashMap<String,Double>wmap,String fileName)
+{
+   BufferedWriter bw = null;
+   try {
+    File file = new File(fileName);
+     if (!file.exists()) {
+        file.createNewFile();
+     }
+     FileWriter fw = new FileWriter(rootpath+file);
+     bw = new BufferedWriter(fw);
+    for (String name: wmap.keySet()){
+       String key =name;
+       String value = wmap.get(name).toString();
+       bw.write(key+" "+value+"\n");
+    }
+    System.out.println("Write Successfull: "+fileName);
+
+ } catch (IOException ioe) {
+      ioe.printStackTrace();
+   }
+   finally
+   { 
+      try{
+         if(bw!=null)
+            bw.close();
+      }catch(Exception ex){
+          System.out.println("Error in closing the BufferedWriter"+ex);
+       }
+
+   }
+
+}
 private HashSet<Post> getPosts(String readfilepath, String writepath){
     HashSet<Post>postSet = new HashSet<>();
     BufferedReader reader=null;
@@ -201,8 +318,8 @@ private HashSet<Post> getPosts(String readfilepath, String writepath){
             if(countpost%10000==0){
                 System.out.println("Written: "+countpost + " Skipped: "+skipped_count);
              }
-            postSet.add(p);
-                    
+            //postSet.add(p);
+              bw.write(p.getTitle()+"\n"+p.getTags().toString()+"\n");      
             // System.out.println(p); 
             
        }
@@ -381,6 +498,39 @@ public void writePosts(HashSet<Post>postset,String field, String fileName)
    }
 
 }
+//for double sorting
+    private static HashMap<String, Double> sortByComparatorDouble(HashMap<String, Double> unsortMap, final boolean order)
+    {
+
+        List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>(unsortMap.entrySet());
+
+        // Sorting the list based on values
+        Collections.sort(list, new Comparator<Map.Entry<String, Double>>()
+        {
+            public int compare(Map.Entry<String, Double> o1,
+                    Map.Entry<String, Double> o2)
+            {
+                if (order)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+                else
+                {
+                    return o2.getValue().compareTo(o1.getValue());
+
+                }
+            }
+        });
+
+        // Maintaining insertion order with the help of LinkedList
+        HashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+        for (Map.Entry<String, Double> entry : list)
+        {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
  private static HashMap<String, Integer> sortByComparator(HashMap<String, Integer> unsortMap, final boolean order)
 {
 
